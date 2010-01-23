@@ -25,10 +25,10 @@ driver.
 .BI "PointingStick Sensitivity"
 1 8-bit positive value.
 .TP 7
-.BI "PointingStick Wheel Emulation"
+.BI "PointingStick Scrolling"
 1 boolean value (8 bit, 0 or 1).
 .TP 7
-.BI "PointingStick Wheel Emulation Timeout"
+.BI "PointingStick Middle Button Timeout"
 1 16-bit positive value.
 
 .SH SEE ALSO

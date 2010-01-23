@@ -41,8 +41,8 @@
 #include <X11/Xatom.h>
 
 static Atom prop_sensitivity = 0;
-static Atom prop_wheel_emulation = 0;
-static Atom prop_wheel_emulation_timeout = 0;
+static Atom prop_scrolling = 0;
+static Atom prop_middle_button_timeout = 0;
 
 #ifdef HAVE_PROPERTIES
 #include <xserver-properties.h>
@@ -193,8 +193,8 @@ pre_init(InputDriverPtr  drv,
     local->flags |= XI86_CONFIGURED;
 
     priv->sensitivity = 100;
-    priv->wheel_emulation = TRUE;
-    priv->wheel_emulation_timeout = 100;
+    priv->scrolling = TRUE;
+    priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
 
     success = TRUE;
@@ -253,15 +253,15 @@ set_property(DeviceIntPtr device,
             priv->sensitivity = sensitivity;
     }
 
-    if (atom == prop_wheel_emulation) {
+    if (atom == prop_scrolling) {
         if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
             return BadMatch;
 
         if (!checkonly)
-            priv->wheel_emulation = *((BOOL*)val->data);
+            priv->scrolling = *((BOOL*)val->data);
     }
 
-    if (atom == prop_wheel_emulation_timeout) {
+    if (atom == prop_middle_button_timeout) {
         int timeout;
 
         if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
@@ -272,7 +272,7 @@ set_property(DeviceIntPtr device,
             return BadValue;
 
         if (!checkonly)
-            priv->wheel_emulation_timeout = timeout;
+            priv->middle_button_timeout = timeout;
     }
 
     return Success;
@@ -295,26 +295,26 @@ init_properties (DeviceIntPtr device)
         return;
     XISetDevicePropertyDeletable(device, prop_sensitivity, FALSE);
 
-    prop_wheel_emulation = MakeAtom(POINTINGSTICK_PROP_WHEEL_EMULATION,
-                                    strlen(POINTINGSTICK_PROP_WHEEL_EMULATION), TRUE);
-    rc = XIChangeDeviceProperty(device, prop_wheel_emulation, XA_INTEGER, 8,
+    prop_scrolling = MakeAtom(POINTINGSTICK_PROP_SCROLLING,
+                              strlen(POINTINGSTICK_PROP_SCROLLING), TRUE);
+    rc = XIChangeDeviceProperty(device, prop_scrolling, XA_INTEGER, 8,
                                 PropModeReplace, 1,
-                                &priv->wheel_emulation,
+                                &priv->scrolling,
                                 FALSE);
     if (rc != Success)
         return;
-    XISetDevicePropertyDeletable(device, prop_wheel_emulation, FALSE);
+    XISetDevicePropertyDeletable(device, prop_scrolling, FALSE);
 
-    prop_wheel_emulation_timeout = MakeAtom(POINTINGSTICK_PROP_WHEEL_EMULATION_TIMEOUT,
-                                            strlen(POINTINGSTICK_PROP_WHEEL_EMULATION_TIMEOUT),
-                                            TRUE);
-    rc = XIChangeDeviceProperty(device, prop_wheel_emulation_timeout, XA_INTEGER, 16,
+    prop_middle_button_timeout = MakeAtom(POINTINGSTICK_PROP_MIDDLE_BUTTON_TIMEOUT,
+                                          strlen(POINTINGSTICK_PROP_MIDDLE_BUTTON_TIMEOUT),
+                                          TRUE);
+    rc = XIChangeDeviceProperty(device, prop_middle_button_timeout, XA_INTEGER, 16,
                                 PropModeReplace, 1,
-                                &priv->wheel_emulation_timeout,
+                                &priv->middle_button_timeout,
                                 FALSE);
     if (rc != Success)
         return;
-    XISetDevicePropertyDeletable(device, prop_wheel_emulation_timeout, FALSE);
+    XISetDevicePropertyDeletable(device, prop_middle_button_timeout, FALSE);
 
     XIRegisterPropertyHandler(device, set_property, NULL, NULL);
 }
@@ -527,14 +527,14 @@ read_event_until_sync (LocalDevicePtr local)
 }
 
 static void
-handle_wheel_emulation_button (InputInfoPtr local)
+handle_scrolling (InputInfoPtr local)
 {
     PointingStickPrivate *priv = local->private;
 
     if (priv->middle_button) {
         if (!priv->middle_button_is_pressed) {
             priv->middle_button_is_pressed = TRUE;
-            priv->wheel_emulation_expires = priv->wheel_emulation_timeout +
+            priv->middle_button_click_expires = priv->middle_button_timeout +
                 GetTimeInMillis();
         }
     } else {
@@ -544,7 +544,7 @@ handle_wheel_emulation_button (InputInfoPtr local)
             return;
 
         priv->middle_button_is_pressed = FALSE;
-        ms = priv->wheel_emulation_expires - GetTimeInMillis();
+        ms = priv->middle_button_click_expires - GetTimeInMillis();
         if (ms > 0) {
             xf86PostButtonEvent(local->dev, 0, 2, 1, 0, 0);
             xf86PostButtonEvent(local->dev, 0, 2, 0, 0, 0);
@@ -561,8 +561,8 @@ post_event (InputInfoPtr local)
     xf86PostButtonEvent(local->dev, 0, 1, priv->left_button, 0, 0);
     xf86PostButtonEvent(local->dev, 0, 3, priv->right_button, 0, 0);
 
-    if (priv->wheel_emulation) {
-        handle_wheel_emulation_button(local);
+    if (priv->scrolling) {
+        handle_scrolling(local);
     } else {
         xf86PostButtonEvent(local->dev, 0, 2, priv->middle_button, 0, 0);
     }
@@ -573,7 +573,7 @@ post_event (InputInfoPtr local)
     x = priv->x * priv->pressure / priv->sensitivity;
     y = priv->y * priv->pressure / priv->sensitivity;
 
-    if (!priv->wheel_emulation || !priv->middle_button) {
+    if (!priv->scrolling || !priv->middle_button) {
         xf86PostMotionEvent(local->dev,
                             0, /* is_absolute */
                             0, /* first_valuator */

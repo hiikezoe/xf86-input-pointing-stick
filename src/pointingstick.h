@@ -31,10 +31,10 @@ typedef struct _PointingStickPrivateRec
     Bool right_button;
     Bool middle_button;
     int sensitivity;
-    Bool wheel_emulation;
+    Bool scrolling;
     Bool middle_button_is_pressed;
-    Time wheel_emulation_expires;
-    Time wheel_emulation_timeout;
+    Time middle_button_click_expires;
+    Time middle_button_timeout;
 } PointingStickPrivate;
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4

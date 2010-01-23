@@ -30,9 +30,9 @@
 #define POINTINGSTICK_PROP_SENSITIVITY "PointingStick Sensitivity"
 
 /* BOOL */
-#define POINTINGSTICK_PROP_WHEEL_EMULATION "PointingStick Wheel Emulation"
+#define POINTINGSTICK_PROP_SCROLLING "PointingStick Scrolling"
 
 /* CARD16 */
-#define POINTINGSTICK_PROP_WHEEL_EMULATION_TIMEOUT "PointingStick Wheel Emulation Timeout"
+#define POINTINGSTICK_PROP_MIDDLE_BUTTON_TIMEOUT "PointingStick Middle Button Timeout"
 
 #endif
