@@ -44,14 +44,8 @@ static Atom prop_sensitivity = 0;
 static Atom prop_scrolling = 0;
 static Atom prop_middle_button_timeout = 0;
 
-#ifdef HAVE_PROPERTIES
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <xserver-properties.h>
-/* 1.6 has properties, but no labels */
-#ifdef AXIS_LABEL_PROP
-#define HAVE_LABELS
-#else
-#undef HAVE_LABELS
-#endif
 #endif
 
 #include "pointingstick.h"
@@ -322,12 +316,12 @@ init_properties (DeviceIntPtr device)
 static int
 device_init (DeviceIntPtr device)
 {
-#define MAX_BUTTONS 7
+#define LOGICAL_MAX_BUTTONS 7
 #define MAX_AXES 2
-    unsigned char map[MAX_BUTTONS + 1];
+    unsigned char map[LOGICAL_MAX_BUTTONS + 1];
     int i;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-    Atom button_labels[MAX_BUTTONS] = {0};
+    Atom button_labels[LOGICAL_MAX_BUTTONS] = {0};
     Atom axes_labels[MAX_AXES] = {0};
 
     button_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
@@ -343,11 +337,11 @@ device_init (DeviceIntPtr device)
 #endif
 
     device->public.on = FALSE;
-    for (i = 0; i <= MAX_BUTTONS; i++)
+    for (i = 0; i <= LOGICAL_MAX_BUTTONS; i++)
         map[i] = i;
 
     InitPointerDeviceStruct((DevicePtr)device,
-                            map, MAX_BUTTONS,
+                            map, LOGICAL_MAX_BUTTONS,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                             button_labels,
 #endif
