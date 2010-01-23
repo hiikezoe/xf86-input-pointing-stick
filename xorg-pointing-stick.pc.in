@@ -1,0 +1,6 @@
+sdkdir=@sdkdir@
+
+Name: xorg-pointing-stick
+Description: X.Org pointing stick input driver.
+Version: @PACKAGE_VERSION@
+Cflags: -I${sdkdir}

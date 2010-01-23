@@ -1,0 +1,35 @@
+.ds q \N'34'
+.TH POINTINGSTICK __drivermansuffix__ __vendorversion__
+.SH NAME
+pointingstick \- pointingstick X.Org input driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" devname \*q
+.B  "  Driver \*qpointingstick\*q"
+.BI "  Option \*qDevice\*q   \*q" devpath \*q
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B pointingstick
+is an __xservername__ input driver for pointing stick.
+.PP
+.SH SUPPORTED HARDWARE
+Currently this driver supports only "Synaptics USB Styk".
+.SH SUPPORTED PROPERTIES
+The following properties are provided by the
+.B pointingstick
+driver.
+.TP 7
+.BI "PointingStick Sensitivity"
+1 8-bit positive value.
+.TP 7
+.BI "PointingStick Wheel Emulation"
+1 boolean value (8 bit, 0 or 1).
+.TP 7
+.BI "PointingStick Wheel Emulation Timeout"
+1 16-bit positive value.
+
+.SH SEE ALSO
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
