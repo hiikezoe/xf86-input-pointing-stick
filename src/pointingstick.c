@@ -178,7 +178,6 @@ pre_init(InputDriverPtr  drv,
     local->switch_mode = NULL; /* toggle absolute/relative mode */
     local->device_control = device_control; /* enable/disable dev */
 
-    xf86Msg(X_PROBED, "%s preinit\n", local->name);
     xf86CollectInputOptions(local, NULL, NULL);
     xf86ProcessCommonOptions(local, local->options);
 
