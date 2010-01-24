@@ -35,6 +35,9 @@ typedef struct _PointingStickPrivateRec
     Bool middle_button_is_pressed;
     Time middle_button_click_expires;
     Time middle_button_timeout;
+    Bool press_to_select;
+    int press_to_select_threshold;
+    Bool press_to_selecting;
 } PointingStickPrivate;
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4

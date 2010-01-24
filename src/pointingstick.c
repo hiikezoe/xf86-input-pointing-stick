@@ -43,6 +43,8 @@
 static Atom prop_sensitivity = 0;
 static Atom prop_scrolling = 0;
 static Atom prop_middle_button_timeout = 0;
+static Atom prop_press_to_select = 0;
+static Atom prop_press_to_select_threshold = 0;
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <xserver-properties.h>
@@ -190,6 +192,9 @@ pre_init(InputDriverPtr  drv,
     priv->scrolling = TRUE;
     priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
+    priv->press_to_select = FALSE;
+    priv->press_to_select_threshold = 8;
+    priv->press_to_selecting = FALSE;
 
     success = TRUE;
 
@@ -269,6 +274,28 @@ set_property(DeviceIntPtr device,
             priv->middle_button_timeout = timeout;
     }
 
+    if (atom == prop_press_to_select) {
+        if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
+            return BadMatch;
+
+        if (!checkonly)
+            priv->press_to_select = *((BOOL*)val->data);
+    }
+
+    if (atom == prop_press_to_select_threshold) {
+        int threshold;
+
+        if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
+            return BadMatch;
+
+        threshold = *((CARD8*)val->data);
+        if (threshold < 1 || threshold > 127)
+            return BadValue;
+
+        if (!checkonly)
+            priv->press_to_select_threshold = threshold;
+    }
+
     return Success;
 }
 
@@ -309,6 +336,28 @@ init_properties (DeviceIntPtr device)
     if (rc != Success)
         return;
     XISetDevicePropertyDeletable(device, prop_middle_button_timeout, FALSE);
+
+    prop_press_to_select = MakeAtom(POINTINGSTICK_PROP_PRESS_TO_SELECT,
+                                    strlen(POINTINGSTICK_PROP_PRESS_TO_SELECT), TRUE);
+    rc = XIChangeDeviceProperty(device, prop_press_to_select, XA_INTEGER, 8,
+                                PropModeReplace, 1,
+                                &priv->press_to_select,
+                                FALSE);
+    if (rc != Success)
+        return;
+    XISetDevicePropertyDeletable(device, prop_press_to_select, FALSE);
+
+    prop_press_to_select_threshold = MakeAtom(POINTINGSTICK_PROP_PRESS_TO_SELECT_THRESHOLD,
+                                              strlen(POINTINGSTICK_PROP_PRESS_TO_SELECT_THRESHOLD),
+                                              TRUE);
+    rc = XIChangeDeviceProperty(device, prop_press_to_select_threshold,
+                                XA_INTEGER, 8,
+                                PropModeReplace, 1,
+                                &priv->press_to_select_threshold,
+                                FALSE);
+    if (rc != Success)
+        return;
+    XISetDevicePropertyDeletable(device, prop_press_to_select_threshold, FALSE);
 
     XIRegisterPropertyHandler(device, set_property, NULL, NULL);
 }
@@ -554,6 +603,16 @@ post_event (InputInfoPtr local)
 
     xf86PostButtonEvent(local->dev, 0, 1, priv->left_button, 0, 0);
     xf86PostButtonEvent(local->dev, 0, 3, priv->right_button, 0, 0);
+
+    if (priv->press_to_select) {
+        if (priv->pressure > priv->press_to_select_threshold) {
+            priv->press_to_selecting = TRUE;
+            xf86PostButtonEvent(local->dev, 0, 1, 1, 0, 0);
+        } else if (priv->press_to_selecting) {
+            priv->press_to_selecting = FALSE;
+            xf86PostButtonEvent(local->dev, 0, 1, 0, 0, 0);
+        }
+    }
 
     if (priv->scrolling) {
         handle_scrolling(local);

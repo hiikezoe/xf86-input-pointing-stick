@@ -35,4 +35,10 @@
 /* CARD16 */
 #define POINTINGSTICK_PROP_MIDDLE_BUTTON_TIMEOUT "PointingStick Middle Button Timeout"
 
+/* BOOL */
+#define POINTINGSTICK_PROP_PRESS_TO_SELECT "PointingStick Press to Select"
+
+/* CARD8 */
+#define POINTINGSTICK_PROP_PRESS_TO_SELECT_THRESHOLD "PointingStick Press to Select Threshold"
+
 #endif
