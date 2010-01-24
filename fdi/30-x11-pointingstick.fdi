@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<deviceinfo version="0.2">
+  <device>
+    <match key="input.product" contains="Synaptics USB Styk">
+      <merge key="input.x11_driver" type="string">pointingstick</merge>
+    </match>
+  </device>
+</deviceinfo>

@@ -1,5 +1,5 @@
-#  Copyright 2007 Peter Hutterer
-#  Copyright 2009 Przemysław Firszt
+#  Copyright 2005 Adam Jackson.
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
 #  to deal in the Software without restriction, including without limitation
@@ -18,23 +18,4 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-AUTOMAKE_OPTIONS = foreign
-
-# Ensure headers are installed below $(prefix) for distcheck
-DISTCHECK_CONFIGURE_FLAGS = --with-sdkdir='$${includedir}/xorg'
-
-SUBDIRS = src man include fdi
-
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xorg-pointing-stick.pc
-
-EXTRA_DIST = ChangeLog
-
-MAINTAINERCLEANFILES=ChangeLog
-
-.PHONY: ChangeLog
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog
+EXTRA_DIST = 11-x11-synaptics.fdi

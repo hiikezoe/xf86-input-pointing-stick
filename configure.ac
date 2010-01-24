@@ -75,4 +75,5 @@ AC_OUTPUT([Makefile
            src/Makefile
            man/Makefile
            include/Makefile
+           fdi/Makefile
            xorg-pointing-stick.pc])
