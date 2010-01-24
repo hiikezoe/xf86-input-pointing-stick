@@ -125,9 +125,6 @@ is_pointingstick (InputInfoPtr local)
     unsigned long evbits[NLONGS(EV_MAX)] = {0};
     unsigned long absbits[NLONGS(ABS_MAX)] = {0};
 
-    if (!strstr(local->name, "Styk"))
-        return FALSE;
-
     SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
     if (rc < 0)
         return FALSE;
