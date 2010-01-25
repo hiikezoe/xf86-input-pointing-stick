@@ -123,23 +123,41 @@ is_pointingstick (InputInfoPtr local)
 {
     int rc;
     unsigned long evbits[NLONGS(EV_MAX)] = {0};
-    unsigned long absbits[NLONGS(ABS_MAX)] = {0};
+    PointingStickPrivate *priv = local->private;
 
     SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
     if (rc < 0)
         return FALSE;
     if (!TestBit(EV_SYN, evbits) ||
-        !TestBit(EV_ABS, evbits) ||
         !TestBit(EV_KEY, evbits)) {
         return FALSE;
     }
 
-    SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
-    if (rc < 0)
-        return FALSE;
-    if (!TestBit(ABS_X, absbits) ||
-        !TestBit(ABS_Y, absbits) ||
-        !TestBit(ABS_PRESSURE, absbits)) {
+    if (TestBit(EV_ABS, evbits)) {
+        unsigned long absbits[NLONGS(ABS_MAX)] = {0};
+        SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
+        if (rc < 0)
+            return FALSE;
+
+        if (!TestBit(ABS_X, absbits) ||
+            !TestBit(ABS_Y, absbits) ||
+            !TestBit(ABS_PRESSURE, absbits)) {
+            return FALSE;
+        }
+        priv->has_abs_events = TRUE;
+    } else if (TestBit(EV_REL, evbits)) {
+        unsigned long relbits[NLONGS(REL_MAX)] = {0};
+        SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_REL, sizeof(relbits)), relbits));
+        if (rc < 0)
+            return FALSE;
+
+        if (!TestBit(REL_X, relbits) ||
+            !TestBit(REL_Y, relbits)) {
+            return FALSE;
+        }
+        priv->has_abs_events = FALSE;
+        priv->pressure = 1;
+    } else {
         return FALSE;
     }
 
@@ -185,7 +203,10 @@ pre_init(InputDriverPtr  drv,
     local->flags |= XI86_OPEN_ON_INIT;
     local->flags |= XI86_CONFIGURED;
 
-    priv->sensitivity = 100;
+    if (priv->has_abs_events)
+        priv->sensitivity = 100;
+    else
+        priv->sensitivity = 1;
     priv->scrolling = TRUE;
     priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
@@ -545,6 +566,16 @@ read_event_until_sync (LocalDevicePtr local)
                 break;
             case BTN_TOUCH:
                 priv->button_touched = v;
+                break;
+            }
+            break;
+        case EV_REL:
+            switch (ev.code) {
+            case REL_X:
+                priv->x = ev.value;
+                break;
+            case REL_Y:
+                priv->y = ev.value;
                 break;
             }
             break;

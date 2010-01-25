@@ -38,6 +38,7 @@ typedef struct _PointingStickPrivateRec
     Bool press_to_select;
     int press_to_select_threshold;
     Bool press_to_selecting;
+    Bool has_abs_events;
 } PointingStickPrivate;
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4
