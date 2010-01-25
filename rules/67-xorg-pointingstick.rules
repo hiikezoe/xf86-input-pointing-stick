@@ -1,0 +1,7 @@
+KERNEL!="event*", GOTO="xorg_pointingstick_end"
+
+DRIVERS=="synaptics-usb", ATTRS{bInterfaceNumber}=="01", ENV{SYNAPTICS_USB_TYPE}="stick"
+
+ACTION=="add|change", SUBSYSTEM=="input", ENV{ID_INPUT_TOUCHPAD}=="?*", ENV{SYNAPTICS_USB_TYPE}=="stick", ENV{x11_driver}="pointingstick"
+
+LABEL="xorg_pointingstick_end"
