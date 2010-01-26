@@ -190,7 +190,6 @@ set_default_values (InputInfoPtr local)
     priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
     priv->press_to_selecting = FALSE;
-    priv->button_state_changed = FALSE;
 }
 
 static InputInfoPtr
@@ -570,7 +569,8 @@ read_event_until_sync (LocalDevicePtr local)
     PointingStickPrivate *priv = local->private;
     int v;
 
-    priv->button_state_changed = FALSE;
+    priv->x = 0;
+    priv->y = 0;
 
     while (read_event(local, &ev)) {
         switch (ev.type) {
@@ -585,15 +585,12 @@ read_event_until_sync (LocalDevicePtr local)
             v = (ev.value ? 1 : 0);
             switch (ev.code) {
             case BTN_LEFT:
-                priv->button_state_changed |= (priv->left_button != v);
                 priv->left_button = v;
                 break;
             case BTN_RIGHT:
-                priv->button_state_changed |= (priv->right_button != v);
                 priv->right_button = v;
                 break;
             case BTN_MIDDLE:
-                priv->button_state_changed |= (priv->middle_button != v);
                 priv->middle_button = v;
                 break;
             case BTN_TOOL_FINGER:
@@ -606,10 +603,10 @@ read_event_until_sync (LocalDevicePtr local)
         case EV_REL:
             switch (ev.code) {
             case REL_X:
-                priv->x = ev.value;
+                priv->x += ev.value;
                 break;
             case REL_Y:
-                priv->y = ev.value;
+                priv->y += ev.value;
                 break;
             }
             break;
@@ -685,9 +682,6 @@ post_event (InputInfoPtr local)
     } else {
         xf86PostButtonEvent(local->dev, 0, 2, priv->middle_button, 0, 0);
     }
-
-    if (priv->button_state_changed)
-        return;
 
     if (priv->pressure <= 0 || priv->pressure > 255)
         return;
