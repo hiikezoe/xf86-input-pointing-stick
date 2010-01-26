@@ -607,8 +607,8 @@ read_event_until_sync (LocalDevicePtr local)
     return FALSE;
 }
 
-static void
-handle_scrolling (InputInfoPtr local)
+static Bool
+handle_middle_button (InputInfoPtr local)
 {
     PointingStickPrivate *priv = local->private;
 
@@ -617,20 +617,23 @@ handle_scrolling (InputInfoPtr local)
             priv->middle_button_is_pressed = TRUE;
             priv->middle_button_click_expires = priv->middle_button_timeout +
                 GetTimeInMillis();
+            return TRUE;
         }
     } else {
         int ms;
 
         if (!priv->middle_button_is_pressed)
-            return;
+            return FALSE;
 
         priv->middle_button_is_pressed = FALSE;
         ms = priv->middle_button_click_expires - GetTimeInMillis();
         if (ms > 0) {
             xf86PostButtonEvent(local->dev, 0, 2, 1, 0, 0);
             xf86PostButtonEvent(local->dev, 0, 2, 0, 0, 0);
+            return TRUE;
         }
     }
+    return FALSE;
 }
 
 static void
@@ -653,7 +656,8 @@ post_event (InputInfoPtr local)
     }
 
     if (priv->scrolling) {
-        handle_scrolling(local);
+        if (handle_middle_button(local))
+            return;
     } else {
         xf86PostButtonEvent(local->dev, 0, 2, priv->middle_button, 0, 0);
     }
@@ -669,7 +673,7 @@ post_event (InputInfoPtr local)
         y = priv->y * priv->pressure / (256 - priv->sensitivity);
     }
 
-    if (!priv->scrolling || !priv->middle_button) {
+    if (!priv->scrolling || !priv->middle_button_is_pressed) {
         xf86PostMotionEvent(local->dev,
                             0, /* is_absolute */
                             0, /* first_valuator */
@@ -679,7 +683,7 @@ post_event (InputInfoPtr local)
         return;
     }
 
-    if (priv->middle_button) {
+    if (priv->middle_button_is_pressed) {
         if (y != 0) {
             int button = (y < 0) ? 4 : 5;
             xf86PostButtonEvent(local->dev, 0, button, 1, 0, 0);
