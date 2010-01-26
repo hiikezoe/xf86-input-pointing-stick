@@ -32,6 +32,7 @@
 
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include <xf86_OSproc.h>
 #include <xf86.h>
@@ -52,6 +53,7 @@ static Atom prop_press_to_select_threshold = 0;
 
 #include "pointingstick.h"
 #include "pointingstick-properties.h"
+#include "trackpoint.h"
 
 #define LONG_BITS (sizeof(long) * 8)
 #define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
@@ -161,6 +163,8 @@ is_pointingstick (InputInfoPtr local)
         return FALSE;
     }
 
+    priv->is_trackpoint = pointingstick_is_trackpoint(local);
+
     return TRUE;
 }
 
@@ -199,14 +203,17 @@ pre_init(InputDriverPtr  drv,
     if (!is_pointingstick(local))
         goto end;
 
+    if (priv->is_trackpoint)
+        priv->sensitivity = trackpoint_get_sensitivity(local);
+    else if (priv->has_abs_events)
+        priv->sensitivity = 100;
+    else
+        priv->sensitivity = 255;
+
     xf86Msg(X_PROBED, "%s found\n", local->name);
     local->flags |= XI86_OPEN_ON_INIT;
     local->flags |= XI86_CONFIGURED;
 
-    if (priv->has_abs_events)
-        priv->sensitivity = 100;
-    else
-        priv->sensitivity = 1;
     priv->scrolling = TRUE;
     priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
@@ -266,8 +273,11 @@ set_property(DeviceIntPtr device,
         if (sensitivity < 1 || sensitivity > 255)
             return BadValue;
 
-        if (!checkonly)
+        if (!checkonly) {
+            if (priv->is_trackpoint)
+                trackpoint_set_sensitivity(local, sensitivity);
             priv->sensitivity = sensitivity;
+        }
     }
 
     if (atom == prop_scrolling) {
@@ -651,8 +661,13 @@ post_event (InputInfoPtr local)
     if (priv->pressure <= 0 || priv->pressure > 255)
         return;
 
-    x = priv->x * priv->pressure / priv->sensitivity;
-    y = priv->y * priv->pressure / priv->sensitivity;
+    if (priv->is_trackpoint) {
+        x = priv->x * priv->pressure;
+        y = priv->y * priv->pressure;
+    } else {
+        x = priv->x * priv->pressure / (256 - priv->sensitivity);
+        y = priv->y * priv->pressure / (256 - priv->sensitivity);
+    }
 
     if (!priv->scrolling || !priv->middle_button) {
         xf86PostMotionEvent(local->dev,

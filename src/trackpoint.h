@@ -21,26 +21,11 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-typedef struct _PointingStickPrivateRec
-{
-    int x;
-    int y;
-    int pressure;
-    Bool button_touched;
-    Bool left_button;
-    Bool right_button;
-    Bool middle_button;
-    int sensitivity;
-    Bool scrolling;
-    Bool middle_button_is_pressed;
-    Time middle_button_click_expires;
-    Time middle_button_timeout;
-    Bool press_to_select;
-    int press_to_select_threshold;
-    Bool press_to_selecting;
-    Bool has_abs_events;
-    Bool is_trackpoint;
-} PointingStickPrivate;
+Bool pointingstick_is_trackpoint   (InputInfoPtr local);
+int  trackpoint_get_sensitivity    (InputInfoPtr local);
+int  trackpoint_set_sensitivity    (InputInfoPtr local,
+                                    int          sensitivity);
+
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4
 */
