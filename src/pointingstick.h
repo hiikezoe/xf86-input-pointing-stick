@@ -30,6 +30,7 @@ typedef struct _PointingStickPrivateRec
     Bool left_button;
     Bool right_button;
     Bool middle_button;
+    Bool button_state_changed;
     int sensitivity;
     Bool scrolling;
     Bool middle_button_is_pressed;
