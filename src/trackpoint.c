@@ -207,6 +207,39 @@ trackpoint_set_sensitivity (InputInfoPtr local, int sensitivity)
     return trackpoint_set_property(local, "sensitivity", sensitivity);
 }
 
+int
+trackpoint_get_press_to_select (InputInfoPtr local)
+{
+    int press_to_select;
+
+    press_to_select = trackpoint_get_property(local, "press_to_select");
+
+    if (press_to_select < 0)
+        press_to_select = 0;
+    else if (press_to_select > 1)
+        press_to_select = 1;
+
+    return press_to_select;
+}
+
+int
+trackpoint_set_press_to_select (InputInfoPtr local, int press_to_select)
+{
+    return trackpoint_set_property(local, "press_to_select", press_to_select);
+}
+
+int
+trackpoint_get_press_to_select_threshold (InputInfoPtr local)
+{
+    return trackpoint_get_property(local, "thresh");
+}
+
+int
+trackpoint_set_press_to_select_threshold (InputInfoPtr local, int press_to_select)
+{
+    return trackpoint_set_property(local, "thresh", press_to_select);
+}
+
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4
 */

@@ -168,6 +168,30 @@ is_pointingstick (InputInfoPtr local)
     return TRUE;
 }
 
+static void
+set_default_values (InputInfoPtr local)
+{
+    PointingStickPrivate *priv = local->private;
+
+    if (priv->is_trackpoint) {
+        priv->sensitivity = trackpoint_get_sensitivity(local);
+        priv->press_to_select = trackpoint_get_press_to_select(local);
+        priv->press_to_select_threshold = trackpoint_get_press_to_select_threshold(local);
+    } else {
+        if (priv->has_abs_events)
+            priv->sensitivity = 100;
+        else
+            priv->sensitivity = 255;
+        priv->press_to_select = FALSE;
+        priv->press_to_select_threshold = 8;
+    }
+
+    priv->scrolling = TRUE;
+    priv->middle_button_timeout = 100;
+    priv->middle_button_is_pressed = FALSE;
+    priv->press_to_selecting = FALSE;
+}
+
 static InputInfoPtr
 pre_init(InputDriverPtr  drv,
          IDevPtr         dev,
@@ -203,23 +227,11 @@ pre_init(InputDriverPtr  drv,
     if (!is_pointingstick(local))
         goto end;
 
-    if (priv->is_trackpoint)
-        priv->sensitivity = trackpoint_get_sensitivity(local);
-    else if (priv->has_abs_events)
-        priv->sensitivity = 100;
-    else
-        priv->sensitivity = 255;
+    set_default_values(local);
 
     xf86Msg(X_PROBED, "%s found\n", local->name);
     local->flags |= XI86_OPEN_ON_INIT;
     local->flags |= XI86_CONFIGURED;
-
-    priv->scrolling = TRUE;
-    priv->middle_button_timeout = 100;
-    priv->middle_button_is_pressed = FALSE;
-    priv->press_to_select = FALSE;
-    priv->press_to_select_threshold = 8;
-    priv->press_to_selecting = FALSE;
 
     success = TRUE;
 
@@ -306,8 +318,11 @@ set_property(DeviceIntPtr device,
         if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
             return BadMatch;
 
-        if (!checkonly)
+        if (!checkonly) {
+            if (priv->is_trackpoint)
+                trackpoint_set_press_to_select(local, *((BOOL*)val->data));
             priv->press_to_select = *((BOOL*)val->data);
+        }
     }
 
     if (atom == prop_press_to_select_threshold) {
@@ -320,8 +335,11 @@ set_property(DeviceIntPtr device,
         if (threshold < 1 || threshold > 127)
             return BadValue;
 
-        if (!checkonly)
+        if (!checkonly) {
+            if (priv->is_trackpoint)
+                trackpoint_set_press_to_select_threshold(local, threshold);
             priv->press_to_select_threshold = threshold;
+        }
     }
 
     return Success;
@@ -645,7 +663,7 @@ post_event (InputInfoPtr local)
     xf86PostButtonEvent(local->dev, 0, 1, priv->left_button, 0, 0);
     xf86PostButtonEvent(local->dev, 0, 3, priv->right_button, 0, 0);
 
-    if (priv->press_to_select) {
+    if (!priv->is_trackpoint && priv->press_to_select) {
         if (priv->pressure > priv->press_to_select_threshold) {
             priv->press_to_selecting = TRUE;
             xf86PostButtonEvent(local->dev, 0, 1, 1, 0, 0);

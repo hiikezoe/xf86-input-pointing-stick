@@ -21,10 +21,18 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-Bool pointingstick_is_trackpoint   (InputInfoPtr local);
-int  trackpoint_get_sensitivity    (InputInfoPtr local);
-int  trackpoint_set_sensitivity    (InputInfoPtr local,
-                                    int          sensitivity);
+Bool pointingstick_is_trackpoint    (InputInfoPtr local);
+int  trackpoint_get_sensitivity     (InputInfoPtr local);
+int  trackpoint_set_sensitivity     (InputInfoPtr local,
+                                     int          sensitivity);
+int  trackpoint_get_press_to_select (InputInfoPtr local);
+int  trackpoint_set_press_to_select (InputInfoPtr local,
+                                     int          press_to_select);
+int  trackpoint_get_press_to_select_threshold
+                                    (InputInfoPtr local);
+int  trackpoint_set_press_to_select_threshold
+                                    (InputInfoPtr local,
+                                     int          press_to_select);
 
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4
