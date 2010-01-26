@@ -121,36 +121,82 @@ pointingstick_is_trackpoint (InputInfoPtr local)
     return get_trackpoint_sysfs_path() ? TRUE : FALSE;
 }
 
+static int
+trackpoint_get_property (InputInfoPtr local,
+                         const char *property_name)
+{
+    FILE *file;
+    char property_path[4096];
+    char property_string[4];
+    size_t read_size;
+    int property = -1;
+
+    PointingStickPrivate *priv = local->private;
+    if (!priv->is_trackpoint)
+        return -1;
+
+    snprintf(property_path, sizeof(property_path),
+             "%s/%s",
+             get_trackpoint_sysfs_path(),
+             property_name);
+
+    file = fopen(property_path, "r");
+    if (!file)
+        return -1;
+
+    read_size = fread(property_string, sizeof(property_string), 1, file);
+    if (read_size > 0)
+        property = atoi(property_string);
+    fclose(file);
+
+    return property;
+}
+
+static int
+trackpoint_set_property (InputInfoPtr local,
+                         const char *property_name,
+                         int property_value)
+{
+    FILE *file;
+    char property_path[4096];
+    char property_string[4];
+    size_t written_size;
+    int ret = Success;
+
+    PointingStickPrivate *priv = local->private;
+    if (!priv->is_trackpoint)
+        return BadRequest;
+
+    snprintf(property_path, sizeof(property_path),
+             "%s/%s",
+             get_trackpoint_sysfs_path(),
+             property_name);
+
+    file = fopen(property_path, "r+");
+    if (!file)
+        return BadAccess;
+
+    snprintf(property_string, sizeof(property_string),
+             "%d", property_value);
+    written_size = fwrite(property_string, strlen(property_string), 1, file);
+    if (written_size != strlen(property_string))
+        ret = BadAccess;
+    fclose(file);
+
+    return ret;
+}
+
 int
 trackpoint_get_sensitivity (InputInfoPtr local)
 {
-    FILE *file;
-    char sensitivity_path[4096];
-    char sensitivity_string[4];
-    size_t read_size;
-    int sensitivity = 255;
+    int sensitivity;
 
-    PointingStickPrivate *priv = local->private;
+    sensitivity = trackpoint_get_property(local, "sensitivity");
 
-    if (!priv->is_trackpoint)
-        return 255;
-
-    snprintf(sensitivity_path, sizeof(sensitivity_path),
-             "%s/sensitivity", get_trackpoint_sysfs_path());
-
-    file = fopen(sensitivity_path, "r");
-    if (!file)
-        return 255;
-
-    read_size = fread(sensitivity_string, sizeof(sensitivity_string), 1, file);
-    if (read_size > 0) {
-        sensitivity = atoi(sensitivity_string);
-        if (sensitivity < 1)
-            sensitivity = 1;
-        else if (sensitivity > 255)
-            sensitivity = 255;
-    }
-    fclose(file);
+    if (sensitivity < 1)
+        sensitivity = 1;
+    else if (sensitivity > 255)
+        sensitivity = 255;
 
     return sensitivity;
 }
@@ -158,32 +204,7 @@ trackpoint_get_sensitivity (InputInfoPtr local)
 int
 trackpoint_set_sensitivity (InputInfoPtr local, int sensitivity)
 {
-    FILE *file;
-    char sensitivity_path[4096];
-    char sensitivity_string[4];
-    size_t written_size;
-    int ret = Success;
-
-    PointingStickPrivate *priv = local->private;
-
-    if (!priv->is_trackpoint)
-        return BadRequest;
-
-    snprintf(sensitivity_path, sizeof(sensitivity_path),
-             "%s/sensitivity", get_trackpoint_sysfs_path());
-
-    file = fopen(sensitivity_path, "r+");
-    if (!file)
-        return BadAccess;
-
-    snprintf(sensitivity_string, sizeof(sensitivity_string),
-             "%d", sensitivity);
-    written_size = fwrite(sensitivity_string, strlen(sensitivity_string), 1, file);
-    if (written_size != strlen(sensitivity_string))
-        ret = BadAccess;
-    fclose(file);
-
-    return ret;
+    return trackpoint_set_property(local, "sensitivity", sensitivity);
 }
 
 /*
