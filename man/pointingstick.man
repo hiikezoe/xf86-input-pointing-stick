@@ -16,7 +16,7 @@ pointingstick \- pointingstick X.Org input driver
 is an __xservername__ input driver for pointing stick.
 .PP
 .SH SUPPORTED HARDWARE
-Currently this driver supports only "Synaptics USB Styk".
+Currently this driver supports "Synaptics USB Styk", "Synaptics USB TouchStyk" and "TrackPoint".
 .SH SUPPORTED PROPERTIES
 The following properties are provided by the
 .B pointingstick
@@ -30,6 +30,12 @@ driver.
 .TP 7
 .BI "PointingStick Middle Button Timeout"
 1 16-bit positive value.
+.TP 7
+.BI "PointingStick Press to Select"
+1 boolean value (8 bit, 0 or 1).
+.TP 7
+.BI "PointingStick Press to Select"
+1 8-bit value positive value.
 
 .SH SEE ALSO
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
