@@ -26,6 +26,7 @@
 #endif
 
 #include <dirent.h>
+#include <unistd.h>
 #include <string.h>
 
 #include <xf86.h>
@@ -35,8 +36,6 @@
 #include "pointingstick.h"
 
 #define SERIO_SYSFS_PATH "/sys/devices/platform/i8042"
-
-static char *trackpoint_sysfs_path = NULL;
 
 static int
 serio_filter (const struct dirent *name)
@@ -73,30 +72,94 @@ find_sensitivity (const char *base_path)
     return TRUE;
 }
 
+static int
+input_filter (const struct dirent *name)
+{
+    if (name->d_type != DT_DIR)
+        return 0;
+
+    return !strncmp(name->d_name, "input", 5);
+}
+
+static Bool
+is_equal_device_name (InputInfoPtr local, const char *device_name_path)
+{
+    Bool ret = FALSE;
+    FILE *file;
+    char name[1024];
+    size_t read_size;
+
+    if (access(device_name_path, F_OK) != 0)
+        return FALSE;
+
+    file = fopen(device_name_path, "r");
+    if (!file)
+        return FALSE;
+
+    memset(name, 0, sizeof(name));
+    read_size = fread(name, 1, sizeof(name), file);
+    if (read_size > 0 && !strncmp(name, local->name, read_size - 1))
+        ret = TRUE;
+
+    fclose(file);
+    return ret;
+}
+
+static Bool
+check_device_name (InputInfoPtr local, const char *base_path)
+{
+    struct dirent **filelist;
+    int i = 0, n;
+    char path[4096];
+    Bool ret = FALSE;
+
+    snprintf(path, sizeof(path), "%s/input", base_path);
+    n = scandir(path, &filelist, input_filter, alphasort);
+    if (n <= 0)
+        return FALSE;
+
+    while (i < n) {
+        char name_path[4096];
+        snprintf(name_path, sizeof(path),
+                 "%s/%s/name", path, filelist[n]->d_name);
+        if (is_equal_device_name(local, name_path)) {
+            ret = TRUE;
+            break;
+        }
+        i++;
+    }
+
+    while (n--)
+        free(filelist[n]);
+    free(filelist);
+
+    return ret;
+}
+
 static char *
-find_trackpoint_sysfs_path (const char *base_path)
+find_trackpoint_sysfs_path (InputInfoPtr local, const char *base_path)
 {
     struct dirent **seriolist;
-    int n;
+    int i = 0, n;
     char *serio_path = NULL;
 
     n = scandir(base_path, &seriolist, serio_filter, alphasort);
     if (n < 0)
         return NULL;
 
-    while (n--) {
+    while (i < n) {
         char path[4096];
         snprintf(path, sizeof(path),
-                 "%s/%s", base_path, seriolist[n]->d_name);
-        if (find_sensitivity(path)) {
+                 "%s/%s", base_path, seriolist[i]->d_name);
+        if (find_sensitivity(path) && check_device_name(local, path)) {
             serio_path = strdup(path);
             break;
         } else {
-            serio_path = find_trackpoint_sysfs_path(path);
+            serio_path = find_trackpoint_sysfs_path(local, path);
             if (serio_path)
                 break;
         }
-        free(seriolist[n]);
+        i++;
     }
 
     while (n--)
@@ -106,19 +169,20 @@ find_trackpoint_sysfs_path (const char *base_path)
     return serio_path;
 }
 
-static char *
-get_trackpoint_sysfs_path (void)
+static const char *
+get_trackpoint_sysfs_path (InputInfoPtr local)
 {
-    if (!trackpoint_sysfs_path)
-        trackpoint_sysfs_path = find_trackpoint_sysfs_path(SERIO_SYSFS_PATH);
+    PointingStickPrivate *priv = local->private;
+    if (!priv->trackpoint_sysfs_path)
+        priv->trackpoint_sysfs_path = find_trackpoint_sysfs_path(local, SERIO_SYSFS_PATH);
 
-    return trackpoint_sysfs_path;
+    return priv->trackpoint_sysfs_path;
 }
 
 Bool
 pointingstick_is_trackpoint (InputInfoPtr local)
 {
-    return get_trackpoint_sysfs_path() ? TRUE : FALSE;
+    return get_trackpoint_sysfs_path(local) ? TRUE : FALSE;
 }
 
 static int
@@ -137,7 +201,7 @@ trackpoint_get_property (InputInfoPtr local,
 
     snprintf(property_path, sizeof(property_path),
              "%s/%s",
-             get_trackpoint_sysfs_path(),
+             get_trackpoint_sysfs_path(local),
              property_name);
 
     file = fopen(property_path, "r");
@@ -172,7 +236,7 @@ trackpoint_set_property (InputInfoPtr local,
 
     snprintf(property_path, sizeof(property_path),
              "%s/%s",
-             get_trackpoint_sysfs_path(),
+             get_trackpoint_sysfs_path(local),
              property_name);
 
     file = fopen(property_path, "r+");

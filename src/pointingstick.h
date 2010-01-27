@@ -40,6 +40,7 @@ typedef struct _PointingStickPrivateRec
     Bool press_to_selecting;
     Bool has_abs_events;
     Bool is_trackpoint;
+    char *trackpoint_sysfs_path;
 } PointingStickPrivate;
 /*
 vi:ts=4:nowrap:ai:expandtab:sw=4

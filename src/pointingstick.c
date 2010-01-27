@@ -173,6 +173,8 @@ set_default_values (InputInfoPtr local)
 {
     PointingStickPrivate *priv = local->private;
 
+    priv->trackpoint_sysfs_path = NULL;
+
     if (priv->is_trackpoint) {
         priv->sensitivity = trackpoint_get_sensitivity(local);
         priv->press_to_select = trackpoint_get_press_to_select(local);
@@ -487,6 +489,7 @@ static int
 device_off (DeviceIntPtr device)
 {
     LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
+    PointingStickPrivate *priv = local->private;
 
     xf86Msg(X_INFO, "%s: Off.\n", local->name);
     if (!device->public.on)
@@ -498,6 +501,8 @@ device_off (DeviceIntPtr device)
         local->fd = -1;
     }
 
+    free(priv->trackpoint_sysfs_path);
+
     device->public.on = FALSE;
 
     return Success;
@@ -507,12 +512,14 @@ static int
 device_close (DeviceIntPtr device)
 {
     LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
+    PointingStickPrivate *priv = local->private;
     xf86Msg(X_INFO, "%s: Close.\n", local->name);
 
     if (local->fd != -1) {
         xf86CloseSerial(local->fd);
         local->fd = -1;
     }
+    free(priv->trackpoint_sysfs_path);
 
     return Success;
 }
