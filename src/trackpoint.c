@@ -127,7 +127,7 @@ trackpoint_get_property (InputInfoPtr local,
 {
     FILE *file;
     char property_path[4096];
-    char property_string[4];
+    char property_string[4]; /* including a line feed */
     size_t read_size;
     int property = -1;
 
@@ -144,9 +144,12 @@ trackpoint_get_property (InputInfoPtr local,
     if (!file)
         return -1;
 
-    read_size = fread(property_string, sizeof(property_string), 1, file);
-    if (read_size > 0)
+    memset(property_string, 0, sizeof(property_string));
+    read_size = fread(property_string, 1, sizeof(property_string), file);
+    if (read_size > 0) {
+        property_string[read_size - 1] = '\0';
         property = atoi(property_string);
+    }
     fclose(file);
 
     return property;
