@@ -1,5 +1,6 @@
 #  Copyright 2007 Peter Hutterer
 #  Copyright 2009 Przemysław Firszt
+#  Copyright 2010 Hiroyuki Ikezoe
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -23,8 +24,8 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-pointing-stick],
-        0.0.1,
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        0.1.0,
+        [poincare@ikezoe.net],
         xf86-input-pointing-stick)
 
 AC_CONFIG_SRCDIR([Makefile.am])
