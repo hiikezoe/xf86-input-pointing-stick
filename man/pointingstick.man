@@ -34,7 +34,7 @@ driver.
 .BI "PointingStick Press to Select"
 1 boolean value (8 bit, 0 or 1).
 .TP 7
-.BI "PointingStick Press to Select"
+.BI "PointingStick Press to Select Threshold"
 1 8-bit value positive value.
 
 .SH SEE ALSO
