@@ -302,9 +302,9 @@ trackpoint_get_press_to_select_threshold (InputInfoPtr local)
 }
 
 int
-trackpoint_set_press_to_select_threshold (InputInfoPtr local, int press_to_select)
+trackpoint_set_press_to_select_threshold (InputInfoPtr local, int threshold)
 {
-    return trackpoint_set_property(local, "thresh", press_to_select);
+    return trackpoint_set_property(local, "thresh", threshold);
 }
 
 /*
