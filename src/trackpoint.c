@@ -121,7 +121,7 @@ check_device_name (InputInfoPtr local, const char *base_path)
     while (i < n) {
         char name_path[4096];
         snprintf(name_path, sizeof(path),
-                 "%s/%s/name", path, filelist[n]->d_name);
+                 "%s/%s/name", path, filelist[i]->d_name);
         if (is_equal_device_name(local, name_path)) {
             ret = TRUE;
             break;
