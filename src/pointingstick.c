@@ -42,6 +42,7 @@
 #include <X11/Xatom.h>
 
 static Atom prop_sensitivity = 0;
+static Atom prop_speed = 0;
 static Atom prop_scrolling = 0;
 static Atom prop_middle_button_timeout = 0;
 static Atom prop_press_to_select = 0;
@@ -177,6 +178,7 @@ set_default_values (InputInfoPtr local)
 
     if (priv->is_trackpoint) {
         priv->sensitivity = trackpoint_get_sensitivity(local);
+        priv->speed = trackpoint_get_speed(local);
         priv->press_to_select = trackpoint_get_press_to_select(local);
         priv->press_to_select_threshold = trackpoint_get_press_to_select_threshold(local);
     } else {
@@ -294,6 +296,23 @@ set_property(DeviceIntPtr device,
         }
     }
 
+    if (priv->is_trackpoint && atom == prop_speed) {
+        int speed;
+
+        if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
+            return BadMatch;
+
+        speed = *((CARD8*)val->data);
+        if (speed < 1 || speed > 255)
+            return BadValue;
+
+        if (!checkonly) {
+            if (priv->is_trackpoint)
+                trackpoint_set_speed(local, speed);
+            priv->speed = speed;
+        }
+    }
+
     if (atom == prop_scrolling) {
         if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
             return BadMatch;
@@ -363,6 +382,18 @@ init_properties (DeviceIntPtr device)
     if (rc != Success)
         return;
     XISetDevicePropertyDeletable(device, prop_sensitivity, FALSE);
+
+    if (priv->is_trackpoint) {
+        prop_speed = MakeAtom(POINTINGSTICK_PROP_SPEED,
+                              strlen(POINTINGSTICK_PROP_SPEED), TRUE);
+        rc = XIChangeDeviceProperty(device, prop_speed, XA_INTEGER, 8,
+                                    PropModeReplace, 1,
+                                    &priv->speed,
+                                    FALSE);
+        if (rc != Success)
+            return;
+        XISetDevicePropertyDeletable(device, prop_speed, FALSE);
+    }
 
     prop_scrolling = MakeAtom(POINTINGSTICK_PROP_SCROLLING,
                               strlen(POINTINGSTICK_PROP_SCROLLING), TRUE);

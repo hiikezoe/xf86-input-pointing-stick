@@ -29,6 +29,9 @@
 /* CARD8 */
 #define POINTINGSTICK_PROP_SENSITIVITY "PointingStick Sensitivity"
 
+/* CARD8 */
+#define POINTINGSTICK_PROP_SPEED "PointingStick Speed"
+
 /* BOOL */
 #define POINTINGSTICK_PROP_SCROLLING "PointingStick Scrolling"
 

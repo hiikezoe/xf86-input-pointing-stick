@@ -275,6 +275,27 @@ trackpoint_set_sensitivity (InputInfoPtr local, int sensitivity)
 }
 
 int
+trackpoint_get_speed (InputInfoPtr local)
+{
+    int speed;
+
+    speed = trackpoint_get_property(local, "speed");
+
+    if (speed < 1)
+        speed = 1;
+    else if (speed > 255)
+        speed = 255;
+
+    return speed;
+}
+
+int
+trackpoint_set_speed (InputInfoPtr local, int speed)
+{
+    return trackpoint_set_property(local, "speed", speed);
+}
+
+int
 trackpoint_get_press_to_select (InputInfoPtr local)
 {
     int press_to_select;

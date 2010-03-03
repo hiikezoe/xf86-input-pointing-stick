@@ -25,6 +25,9 @@ Bool pointingstick_is_trackpoint    (InputInfoPtr local);
 int  trackpoint_get_sensitivity     (InputInfoPtr local);
 int  trackpoint_set_sensitivity     (InputInfoPtr local,
                                      int          sensitivity);
+int  trackpoint_get_speed           (InputInfoPtr local);
+int  trackpoint_set_speed           (InputInfoPtr local,
+                                     int          speed);
 int  trackpoint_get_press_to_select (InputInfoPtr local);
 int  trackpoint_set_press_to_select (InputInfoPtr local,
                                      int          press_to_select);
