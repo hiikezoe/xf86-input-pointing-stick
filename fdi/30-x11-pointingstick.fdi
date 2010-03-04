@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <deviceinfo version="0.2">
   <device>
-    <match key="input.product" contains="Synaptics USB Styk">
+    <match key="input.product" contains_outof="Synaptics USB Styk;TrackPoint">
       <merge key="input.x11_driver" type="string">pointingstick</merge>
     </match>
   </device>
