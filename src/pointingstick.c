@@ -324,7 +324,7 @@ set_property(DeviceIntPtr device,
     if (atom == prop_middle_button_timeout) {
         int timeout;
 
-        if (val->format != 8 || val->size != 1 || val->type != XA_INTEGER)
+        if (val->format != 16 || val->size != 1 || val->type != XA_INTEGER)
             return BadMatch;
 
         timeout = *((CARD16*)val->data);
