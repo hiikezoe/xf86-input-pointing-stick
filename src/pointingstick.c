@@ -533,6 +533,7 @@ device_off (DeviceIntPtr device)
     }
 
     free(priv->trackpoint_sysfs_path);
+    priv->trackpoint_sysfs_path = NULL;
 
     device->public.on = FALSE;
 
@@ -551,6 +552,7 @@ device_close (DeviceIntPtr device)
         local->fd = -1;
     }
     free(priv->trackpoint_sysfs_path);
+    priv->trackpoint_sysfs_path = NULL;
 
     return Success;
 }
