@@ -173,25 +173,36 @@ static void
 set_default_values (InputInfoPtr local)
 {
     PointingStickPrivate *priv = local->private;
+    int sensitivity, speed = -1;
+    int press_to_select_threshold;
+    Bool press_to_select;
 
     priv->trackpoint_sysfs_path = NULL;
 
     if (priv->is_trackpoint) {
-        priv->sensitivity = trackpoint_get_sensitivity(local);
-        priv->speed = trackpoint_get_speed(local);
-        priv->press_to_select = trackpoint_get_press_to_select(local);
-        priv->press_to_select_threshold = trackpoint_get_press_to_select_threshold(local);
+        sensitivity = trackpoint_get_sensitivity(local);
+        speed = trackpoint_get_speed(local);
+        press_to_select = trackpoint_get_press_to_select(local);
+        press_to_select_threshold = trackpoint_get_press_to_select_threshold(local);
     } else {
         if (priv->has_abs_events)
-            priv->sensitivity = 100;
+            sensitivity = 100;
         else
-            priv->sensitivity = 255;
-        priv->press_to_select = FALSE;
-        priv->press_to_select_threshold = 8;
+            sensitivity = 255;
+        press_to_select = FALSE;
+        press_to_select_threshold = 8;
     }
 
+    priv->sensitivity = xf86SetIntOption(local->options, "Sensitivity", sensitivity);
+    if (speed > 0)
+        priv->speed = xf86SetIntOption(local->options, "Speed", speed);
+    priv->middle_button_timeout = xf86SetIntOption(local->options, "MiddleButtonTimeout", 100);
+    priv->press_to_select = xf86SetBoolOption(local->options, "PressToSelect", press_to_select);
+    priv->press_to_select_threshold = xf86SetIntOption(local->options,
+                                                       "PressToSelectThreshold",
+                                                       press_to_select_threshold);
+
     priv->scrolling = TRUE;
-    priv->middle_button_timeout = 100;
     priv->middle_button_is_pressed = FALSE;
     priv->press_to_selecting = FALSE;
 }
