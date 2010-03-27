@@ -664,10 +664,10 @@ read_event_until_sync (LocalDevicePtr local)
         case EV_ABS:
             switch (ev.code) {
             case ABS_X:
-                priv->x = ev.value;
+                priv->x += ev.value;
                 break;
             case ABS_Y:
-                priv->y = ev.value;
+                priv->y += ev.value;
                 break;
             case ABS_PRESSURE:
                 priv->pressure = ev.value;
@@ -741,6 +741,8 @@ post_event (InputInfoPtr local)
         x = priv->x * priv->pressure;
         y = priv->y * priv->pressure;
     } else {
+        priv->x = (abs(x) <= 2) ? 0 : priv->x;
+        priv->y = (abs(y) <= 2) ? 0 : priv->y;
         x = priv->x * priv->pressure / (256 - priv->sensitivity);
         y = priv->y * priv->pressure / (256 - priv->sensitivity);
     }
