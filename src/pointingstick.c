@@ -741,8 +741,8 @@ post_event (InputInfoPtr local)
         x = priv->x * priv->pressure;
         y = priv->y * priv->pressure;
     } else {
-        priv->x = (abs(x) <= 2) ? 0 : priv->x;
-        priv->y = (abs(y) <= 2) ? 0 : priv->y;
+        priv->x = (abs(priv->x) <= 2) ? 0 : priv->x;
+        priv->y = (abs(priv->y) <= 2) ? 0 : priv->y;
         x = priv->x * priv->pressure / (256 - priv->sensitivity);
         y = priv->y * priv->pressure / (256 - priv->sensitivity);
     }
