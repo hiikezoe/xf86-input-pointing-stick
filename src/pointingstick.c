@@ -620,8 +620,10 @@ read_event_until_sync (LocalDevicePtr local)
     PointingStickPrivate *priv = local->private;
     int v;
 
-    priv->x = 0;
-    priv->y = 0;
+    if (priv->is_trackpoint) {
+        priv->x = 0;
+        priv->y = 0;
+    }
 
     while (read_event(local, &ev)) {
         switch (ev.type) {
@@ -664,10 +666,10 @@ read_event_until_sync (LocalDevicePtr local)
         case EV_ABS:
             switch (ev.code) {
             case ABS_X:
-                priv->x += ev.value;
+                priv->x = ev.value;
                 break;
             case ABS_Y:
-                priv->y += ev.value;
+                priv->y = ev.value;
                 break;
             case ABS_PRESSURE:
                 priv->pressure = ev.value;
