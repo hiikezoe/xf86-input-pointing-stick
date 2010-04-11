@@ -205,6 +205,7 @@ set_default_values (InputInfoPtr local)
     priv->scrolling = TRUE;
     priv->middle_button_is_pressed = FALSE;
     priv->press_to_selecting = FALSE;
+    priv->button_touched = FALSE;
 }
 
 static InputInfoPtr
@@ -737,6 +738,9 @@ post_event (InputInfoPtr local)
     }
 
     if (priv->pressure <= 0 || priv->pressure > 255)
+        return;
+
+    if (priv->button_touched)
         return;
 
     if (priv->is_trackpoint) {
