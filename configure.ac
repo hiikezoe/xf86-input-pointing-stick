@@ -24,7 +24,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-pointing-stick],
-        0.3.2,
+        0.3.3,
         [poincare@ikezoe.net],
         xf86-input-pointing-stick)
 
