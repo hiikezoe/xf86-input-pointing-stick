@@ -740,9 +740,6 @@ post_event (InputInfoPtr local)
     if (priv->pressure <= 0 || priv->pressure > 250)
         return;
 
-    if (priv->button_touched)
-        return;
-
     if (priv->is_trackpoint) {
         x = priv->x * priv->pressure;
         y = priv->y * priv->pressure;
