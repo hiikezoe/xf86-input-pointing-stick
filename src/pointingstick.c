@@ -737,7 +737,7 @@ post_event (InputInfoPtr local)
         xf86PostButtonEvent(local->dev, 0, 2, priv->middle_button, 0, 0);
     }
 
-    if (priv->pressure <= 0 || priv->pressure > 255)
+    if (priv->pressure <= 0 || priv->pressure > 250)
         return;
 
     if (priv->button_touched)
