@@ -25,7 +25,7 @@
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-pointing-stick],
         0.3.3,
-        [poincare@ikezoe.net],
+        [hiikezoe@gnome.org],
         xf86-input-pointing-stick)
 
 AC_CONFIG_SRCDIR([Makefile.am])
