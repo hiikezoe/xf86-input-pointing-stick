@@ -220,7 +220,7 @@ pre_init(InputDriverPtr  drv,
     if (!(local = xf86AllocateInput(drv, 0)))
         return NULL;
 
-    priv = xcalloc(1, sizeof(PointingStickPrivate));
+    priv = calloc(1, sizeof(PointingStickPrivate));
     if (!priv)
         goto end;
 
@@ -259,7 +259,7 @@ pre_init(InputDriverPtr  drv,
 
     if (!success) {
         local->private = NULL;
-        xfree(priv);
+        free(priv);
         xf86DeleteInput(local, 0);
         local = NULL;
     }
@@ -272,7 +272,7 @@ uninit (InputDriverPtr drv,
         InputInfoPtr   local,
         int            flags)
 {
-    xfree(local->private);
+    free(local->private);
     local->private = NULL;
     xf86DeleteInput(local, 0);
 }
