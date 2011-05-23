@@ -61,8 +61,8 @@ static Atom prop_press_to_select_threshold = 0;
 #define TestBit(bit, array) ((array[(bit) / LONG_BITS]) & (1L << ((bit) % LONG_BITS)))
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
-static InputInfoPtr pre_init       (InputDriverPtr drv,
-                                    IDevPtr dev,
+static int          pre_init       (InputDriverPtr drv,
+                                    InputInfoPtr info,
                                     int flags);
 static void         uninit         (InputDriverPtr drv,
                                     InputInfoPtr pInfo,
@@ -208,63 +208,51 @@ set_default_values (InputInfoPtr local)
     priv->button_touched = FALSE;
 }
 
-static InputInfoPtr
+static int
 pre_init(InputDriverPtr  drv,
-         IDevPtr         dev,
+         InputInfoPtr    info,
          int             flags)
 {
-    InputInfoPtr local;
     PointingStickPrivate *priv;
     Bool success = FALSE;
-
-    if (!(local = xf86AllocateInput(drv, 0)))
-        return NULL;
 
     priv = calloc(1, sizeof(PointingStickPrivate));
     if (!priv)
         goto end;
 
-    local->private = priv;
-    local->name = dev->identifier;
-    local->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-    local->type_name = "POINTINGSTICK";
-    local->conf_idev = dev;
-    local->read_input = read_input; /* new data avl */
-    local->switch_mode = NULL; /* toggle absolute/relative mode */
-    local->device_control = device_control; /* enable/disable dev */
+    info->private = priv;
+    info->type_name = "POINTINGSTICK";
+    info->read_input = read_input; /* new data avl */
+    info->switch_mode = NULL; /* toggle absolute/relative mode */
+    info->device_control = device_control; /* enable/disable dev */
 
-    xf86CollectInputOptions(local, NULL, NULL);
-    xf86ProcessCommonOptions(local, local->options);
+    xf86ProcessCommonOptions(info, info->options);
 
-    local->fd = xf86OpenSerial(local->options);
-    if (local->fd == -1)
+    info->fd = xf86OpenSerial(info->options);
+    if (info->fd == -1)
         goto end;
 
-    if (!is_pointingstick(local))
+    if (!is_pointingstick(info))
         goto end;
 
-    set_default_values(local);
+    set_default_values(info);
 
-    xf86Msg(X_PROBED, "%s found\n", local->name);
-    local->flags |= XI86_OPEN_ON_INIT;
-    local->flags |= XI86_CONFIGURED;
+    xf86Msg(X_PROBED, "%s found\n", info->name);
 
     success = TRUE;
 
  end:
-    if (local->fd != -1) {
-        xf86CloseSerial(local->fd);
-        local->fd = -1;
+    if (info->fd != -1) {
+        xf86CloseSerial(info->fd);
+        info->fd = -1;
     }
 
     if (!success) {
-        local->private = NULL;
+        info->private = NULL;
         free(priv);
-        xf86DeleteInput(local, 0);
-        local = NULL;
     }
 
-    return local;
+    return Success;
 }
 
 static void
@@ -288,7 +276,7 @@ set_property(DeviceIntPtr device,
              XIPropertyValuePtr val,
              BOOL checkonly)
 {
-    LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
+    InputInfoPtr local = device->public.devicePrivate;
     PointingStickPrivate *priv = local->private;
 
     if (atom == prop_sensitivity) {
@@ -381,7 +369,7 @@ set_property(DeviceIntPtr device,
 static void
 init_properties (DeviceIntPtr device)
 {
-    LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
+    InputInfoPtr local = device->public.devicePrivate;
     PointingStickPrivate *priv = local->private;
     int rc;
 
@@ -498,7 +486,8 @@ device_init (DeviceIntPtr device)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                    axes_labels[i],
 #endif
-                                   -1, -1, 1, 1, 1);
+                                   -1, -1, 1, 1, 1,
+                                   Relative);
         xf86InitValuatorDefaults(device, i);
     }
 
@@ -510,19 +499,19 @@ device_init (DeviceIntPtr device)
 static int
 device_on (DeviceIntPtr device)
 {
-    LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
+    InputInfoPtr info = device->public.devicePrivate;
 
-    xf86Msg(X_INFO, "%s: On.\n", local->name);
+    xf86Msg(X_INFO, "%s: On.\n", info->name);
     if (device->public.on)
         return Success;
 
-    local->fd = xf86OpenSerial(local->options);
-    if (local->fd == -1) {
-        xf86Msg(X_WARNING, "%s: cannot open input device\n", local->name);
+    info->fd = xf86OpenSerial(info->options);
+    if (info->fd == -1) {
+        xf86Msg(X_WARNING, "%s: cannot open input device\n", info->name);
         return BadAccess;
     }
 
-    xf86AddEnabledDevice(local);
+    xf86AddEnabledDevice(info);
     device->public.on = TRUE;
 
     return Success;
@@ -531,17 +520,17 @@ device_on (DeviceIntPtr device)
 static int
 device_off (DeviceIntPtr device)
 {
-    LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
-    PointingStickPrivate *priv = local->private;
+    InputInfoPtr info = device->public.devicePrivate;
+    PointingStickPrivate *priv = info->private;
 
-    xf86Msg(X_INFO, "%s: Off.\n", local->name);
+    xf86Msg(X_INFO, "%s: Off.\n", info->name);
     if (!device->public.on)
         return Success;
 
-    if (local->fd != -1) {
-        xf86RemoveEnabledDevice(local);
-        xf86CloseSerial(local->fd);
-        local->fd = -1;
+    if (info->fd != -1) {
+        xf86RemoveEnabledDevice(info);
+        xf86CloseSerial(info->fd);
+        info->fd = -1;
     }
 
     free(priv->trackpoint_sysfs_path);
@@ -555,13 +544,13 @@ device_off (DeviceIntPtr device)
 static int
 device_close (DeviceIntPtr device)
 {
-    LocalDevicePtr local = (LocalDevicePtr) device->public.devicePrivate;
-    PointingStickPrivate *priv = local->private;
-    xf86Msg(X_INFO, "%s: Close.\n", local->name);
+    InputInfoPtr info = device->public.devicePrivate;
+    PointingStickPrivate *priv = info->private;
+    xf86Msg(X_INFO, "%s: Close.\n", info->name);
 
-    if (local->fd != -1) {
-        xf86CloseSerial(local->fd);
-        local->fd = -1;
+    if (info->fd != -1) {
+        xf86CloseSerial(info->fd);
+        info->fd = -1;
     }
     free(priv->trackpoint_sysfs_path);
     priv->trackpoint_sysfs_path = NULL;
@@ -597,17 +586,17 @@ device_control (DeviceIntPtr    device,
 
 /* this function is based on SynapticsReadEvent() in xf86-input-synaptics/src/evcomm.c. */
 static Bool
-read_event (LocalDevicePtr local, struct input_event *ev)
+read_event (InputInfoPtr info, struct input_event *ev)
 {
     ssize_t len;
 
-    len = read(local->fd, ev, sizeof(*ev));
+    len = read(info->fd, ev, sizeof(*ev));
     if (len <= 0) {
         if (errno != EAGAIN)
-            xf86MsgVerb(X_NONE, 0, "%s: Read error %s\n", local->name, strerror(errno));
+            xf86MsgVerb(X_NONE, 0, "%s: Read error %s\n", info->name, strerror(errno));
         return FALSE;
     } else if (len % sizeof(*ev)) {
-        xf86MsgVerb(X_NONE, 0, "%s: Read error, invalid number of bytes.", local->name);
+        xf86MsgVerb(X_NONE, 0, "%s: Read error, invalid number of bytes.", info->name);
         return FALSE;
     }
 
@@ -615,10 +604,10 @@ read_event (LocalDevicePtr local, struct input_event *ev)
 }
 
 static Bool
-read_event_until_sync (LocalDevicePtr local)
+read_event_until_sync (InputInfoPtr info)
 {
     struct input_event ev;
-    PointingStickPrivate *priv = local->private;
+    PointingStickPrivate *priv = info->private;
     int v;
 
     if (priv->is_trackpoint) {
@@ -626,7 +615,7 @@ read_event_until_sync (LocalDevicePtr local)
         priv->y = 0;
     }
 
-    while (read_event(local, &ev)) {
+    while (read_event(info, &ev)) {
         switch (ev.type) {
         case EV_SYN:
             switch (ev.code) {
