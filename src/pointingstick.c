@@ -214,7 +214,6 @@ pre_init(InputDriverPtr  drv,
          int             flags)
 {
     PointingStickPrivate *priv;
-    Bool success = FALSE;
 
     priv = calloc(1, sizeof(PointingStickPrivate));
     if (!priv)
@@ -239,7 +238,7 @@ pre_init(InputDriverPtr  drv,
 
     xf86Msg(X_PROBED, "%s found\n", info->name);
 
-    success = TRUE;
+    return Success;
 
  end:
     if (info->fd != -1) {
@@ -247,12 +246,10 @@ pre_init(InputDriverPtr  drv,
         info->fd = -1;
     }
 
-    if (!success) {
-        info->private = NULL;
-        free(priv);
-    }
+    free(priv);
+    info->private = NULL;
 
-    return Success;
+    return BadAlloc;
 }
 
 static void
